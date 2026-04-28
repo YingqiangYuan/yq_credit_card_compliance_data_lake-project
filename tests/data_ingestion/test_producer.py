@@ -7,14 +7,16 @@ Covers:
 
 - ``to_kinesis_record`` serialisation (JSON bytes + partition key)
 - ``send_records`` happy path (single batch, multi-batch via ``itertools.batched``)
-- ``send_records`` empty input short-circuit
-- ``send_records`` partial-failure collection (simulated by patching the
-  ``put_records`` response — moto itself does not produce per-record failures)
+- ``send_records`` empty input short-circuit (verified via moto — calling
+  ``put_records`` with an empty list would raise, so a successful zero-result
+  proves the short-circuit fired)
+- ``send_records`` partial-failure collection — uses ``monkeypatch`` to inject
+  a custom ``put_records`` response because moto's in-memory Kinesis does not
+  model per-record throttling failures
 """
 
 import json
 from datetime import datetime, UTC
-from unittest.mock import MagicMock
 from uuid import uuid4
 
 import boto3
@@ -74,15 +76,23 @@ def test_to_kinesis_record_data_round_trips():
 # ------------------------------------------------------------------------------
 # send_records — happy paths against moto Kinesis
 # ------------------------------------------------------------------------------
+@moto.mock_aws
 def test_send_records_empty_short_circuits():
-    # No client call should happen — pass a MagicMock and assert it's never used
-    client = MagicMock()
+    """Empty input must short-circuit before hitting the API.
+
+    If the early-return is ever removed, ``put_records(Records=[])`` will raise
+    a botocore validation error and this test will fail naturally — no need to
+    spy on the client to verify "zero calls".
+    """
+    client = boto3.client("kinesis", region_name=_REGION)
+    client.create_stream(StreamName=_STREAM, ShardCount=1)
+    client.get_waiter("stream_exists").wait(StreamName=_STREAM)
+
     result = send_records(client, _STREAM, [])
     assert isinstance(result, SendResult)
     assert result.total == 0
     assert result.success_count == 0
     assert result.failed_count == 0
-    client.put_records.assert_not_called()
 
 
 @moto.mock_aws
@@ -136,22 +146,35 @@ def test_send_records_calls_put_records_correct_number_of_times(monkeypatch):
 
 
 # ------------------------------------------------------------------------------
-# send_records — partial failure path (simulated client)
+# send_records — partial failure path
 # ------------------------------------------------------------------------------
-def test_send_records_collects_partial_failures():
-    """When Kinesis reports per-record failures, they surface in failed_entries."""
-    client = MagicMock()
-    client.put_records.return_value = {
-        "FailedRecordCount": 1,
-        "Records": [
-            {"SequenceNumber": "1", "ShardId": "shardId-000000000000"},
-            {
-                "ErrorCode": "ProvisionedThroughputExceededException",
-                "ErrorMessage": "Rate exceeded",
-            },
-            {"SequenceNumber": "3", "ShardId": "shardId-000000000000"},
-        ],
-    }
+@moto.mock_aws
+def test_send_records_collects_partial_failures(monkeypatch):
+    """When Kinesis reports per-record failures, they surface in failed_entries.
+
+    moto's in-memory Kinesis cannot simulate per-record throttling, so we
+    monkeypatch ``put_records`` on a real boto3 client (still moto-backed for
+    everything else) to return a hand-crafted response shape.
+    """
+    client = boto3.client("kinesis", region_name=_REGION)
+    client.create_stream(StreamName=_STREAM, ShardCount=1)
+    client.get_waiter("stream_exists").wait(StreamName=_STREAM)
+
+    def fake_put_records(**_kwargs):
+        # Middle record is reported as throttled
+        return {
+            "FailedRecordCount": 1,
+            "Records": [
+                {"SequenceNumber": "1", "ShardId": "shardId-000000000000"},
+                {
+                    "ErrorCode": "ProvisionedThroughputExceededException",
+                    "ErrorMessage": "Rate exceeded",
+                },
+                {"SequenceNumber": "3", "ShardId": "shardId-000000000000"},
+            ],
+        }
+
+    monkeypatch.setattr(client, "put_records", fake_put_records)
 
     txns = TransactionFaker(seed=0).make_many(3)
     result = send_records(client, _STREAM, txns)

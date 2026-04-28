@@ -5,6 +5,7 @@ omit =
     yq_credit_card_compliance_data_lake/docs/*
     yq_credit_card_compliance_data_lake/tests/*
     yq_credit_card_compliance_data_lake/vendor/*
+    yq_credit_card_compliance_data_lake/cdk/*
     yq_credit_card_compliance_data_lake/_version.py
     yq_credit_card_compliance_data_lake/cli.py
     yq_credit_card_compliance_data_lake/paths.py

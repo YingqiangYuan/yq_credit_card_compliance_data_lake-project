@@ -53,6 +53,13 @@ class PathEnum:
     dir_build = dir_project_root / "build"
     dir_dist = dir_project_root / "dist"
 
+    # Lambda Functions
+    dir_build_lambda = dir_project_root / "build" / "lambda"
+    dir_build_lambda_source = dir_build_lambda / "source"
+    dir_build_lambda_source_build = dir_build_lambda_source / "build"
+    path_lambda_source_zip = dir_build_lambda_source / "source.zip"
+    path_lambda_source_s3uri = dir_build_lambda_source / "source-s3uri.txt"
+
 
 path_enum = PathEnum()
 """

@@ -5,11 +5,19 @@ CODECOV_TOKEN = "{{ exec(command='uvx --from home-secret-toml hst get yq-codecov
 READTHEDOCS_TOKEN = "{{ exec(command='uvx --from home-secret-toml hst get yq-rtd-token') }}"
 PYPI_TOKEN = "{{ exec(command='uvx --from home-secret-toml hst get yq-pypi-token') }}"
 
+_.file = [
+  ".env.shared",
+  ".env",
+]
+
 [tools]
 python = "3.12"
 uv = "latest"
 claude = "latest"
 pandoc = "3.9" # Use pandoc 3.9 - latest stable major version as of 2026-04
+node = "24"
+awscli = "2.34.24"
+"npm:aws-cdk" = "2.1119.0"
 
 # === Tasks ===
 # Python Environment Management
@@ -39,13 +47,13 @@ uv export --format requirements-txt --extra mise --no-emit-project --no-hashes -
 
 # Testing
 [tasks.test]
-description = "🧪 Run unit tests using pytest (scans test files automatically)"
-run = ".venv/bin/pytest tests"
+description = "🧪 Run CDK integration tests using pytest (no coverage, avoids aws-cdk import overhead)"
+run = ".venv/bin/pytest tests/cdk -s --tb=native"
 depends = ["inst"]
 
 [tasks.cov]
 description = "🧪📊 Run unit tests with code coverage using pytest (generates HTML report in htmlcov/)"
-run = ".venv/bin/pytest tests -s --tb=native --cov=yq_credit_card_compliance_data_lake --cov-report term-missing --cov-report html:htmlcov"
+run = ".venv/bin/pytest tests --ignore=tests/cdk -s --tb=native --cov=yq_credit_card_compliance_data_lake --cov-report term-missing --cov-report html:htmlcov"
 depends = ["inst"]
 
 [tasks.view-cov]
@@ -105,4 +113,51 @@ depends = ["inst"]
 [tasks.update-github-metadata]
 description = "🔧 Update GitHub repository description and homepage using PyGithub"
 run = ".venv/bin/python .mise/tasks/update-github-metadata.py"
+depends = ["inst"]
+
+# CDK
+[tasks.cdk-plan]
+description = "🔵 Preview CDK changes then deploy (runs cdk diff followed by cdk deploy)"
+dir = "cdk"
+depends = ["inst"]
+run = """
+cdk diff --all
+cdk deploy --all --require-approval never
+"""
+
+[tasks.cdk-up]
+description = "🟢 Deploy CDK stacks to AWS (runs cdk deploy, skip approval)"
+dir = "cdk"
+depends = ["inst", "lambda-source-deploy"]
+run = "cdk deploy --all --require-approval never --profile $LOCAL_AWS_PROFILE"
+
+[tasks.cdk-down]
+description = "🔴 Destroy CDK stacks from AWS (force, no confirmation)"
+dir = "cdk"
+run = "cdk destroy --all --force --profile $LOCAL_AWS_PROFILE"
+
+[tasks.cdk-down-ask]
+description = "🟡 Destroy CDK stacks from AWS (with confirmation prompt)"
+dir = "cdk"
+run = "cdk destroy --all --profile $LOCAL_AWS_PROFILE"
+
+# Lambda DevOps
+[tasks.lambda-layer-build-only]
+description = "🐳 Build Lambda layer in Docker container (local only — no zip/upload/publish)"
+run = ".venv/bin/python .mise/tasks/lambda_layer_1_build_only.py"
+depends = ["inst"]
+
+[tasks.lambda-layer-deploy]
+description = "🚀 Full Lambda layer pipeline: Build → Zip → Upload S3 → Publish AWS Lambda"
+run = ".venv/bin/python .mise/tasks/lambda_layer_1_build_lambda_layer_in_container.py"
+depends = ["inst"]
+
+[tasks.lambda-layer-cleanup]
+description = "🧹 Clean up old Lambda layer versions (keeps latest 1)"
+run = ".venv/bin/python .mise/tasks/lambda_layer_2_cleanup_old_layer_versions.py"
+depends = ["inst"]
+
+[tasks.lambda-source-deploy]
+description = "📦 Build Lambda source zip using uv and upload to S3"
+run = ".venv/bin/python .mise/tasks/lambda_layer_3_build_lambda_source.py"
 depends = ["inst"]

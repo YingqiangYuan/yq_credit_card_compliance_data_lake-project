@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
 
+"""
+Smoke test for the public API module.
+
+Verifies that ``yq_credit_card_compliance_data_lake.api`` can be imported without errors.
+This catches broken re-exports, missing dependencies, and import-time
+exceptions early — before any functional tests run.
+"""
+
 from yq_credit_card_compliance_data_lake import api
 
 

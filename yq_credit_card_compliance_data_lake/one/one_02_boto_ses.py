@@ -64,3 +64,15 @@ class OneBotoSesMixin:  # pragma: no cover
     @cached_property
     def kinesis_client(self: "One"):
         return self.boto_ses.client("kinesis")
+
+    @cached_property
+    def polars_storage_options(self: "One") -> dict:
+        creds = self.boto_ses.get_credentials().get_frozen_credentials()
+        storage_options = {
+            "AWS_REGION": self.aws_region,
+            "AWS_ACCESS_KEY_ID": creds.access_key,
+            "AWS_SECRET_ACCESS_KEY": creds.secret_key,
+            "AWS_SESSION_TOKEN": creds.token or "",
+            "AWS_S3_ALLOW_UNSAFE_RENAME": "true",  # skip DynamoDB lock
+        }
+        return storage_options

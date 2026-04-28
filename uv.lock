@@ -1029,6 +1029,34 @@ wheels = [
 ]
 
 [[package]]
+name = "polars"
+version = "1.40.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "polars-runtime-32" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b3/8c/bc9bc948058348ed43117cecc3007cd608f395915dae8a00974579a5dab1/polars-1.40.1.tar.gz", hash = "sha256:ab2694134b137596b5a59bfd7b4c54ebbc9b59f9403127f18e32d363777552e8", size = 733574, upload-time = "2026-04-22T19:15:55.507Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ea/91/74fc60d94488685a92ac9d49d7ec55f3e91fe9b77942a6235a5fa7f249c3/polars-1.40.1-py3-none-any.whl", hash = "sha256:c0f861219d1319cdea45c4ce4d30355a47176b8f98dcedf95ea8269f131b8abd", size = 828723, upload-time = "2026-04-22T19:14:25.452Z" },
+]
+
+[[package]]
+name = "polars-runtime-32"
+version = "1.40.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/54/ba/26d40f039be9f552b5fd7365a621bdfc0f8e912ef77094ae4693491b0bae/polars_runtime_32-1.40.1.tar.gz", hash = "sha256:37f3065615d1bf90d03b5326222df4c5c1f8a5d33e50470aa588e3465e6eb814", size = 2935843, upload-time = "2026-04-22T19:15:57.26Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7d/46/22c8af5eed68ac2eeb556e0fa3ca8a7b798e984ceff4450888f3b5ac61fd/polars_runtime_32-1.40.1-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:b748ef652270cc49e9e69f99a035e0eb4d5f856d42bcd6ac4d9d80a40142aa1e", size = 52098755, upload-time = "2026-04-22T19:14:28.555Z" },
+    { url = "https://files.pythonhosted.org/packages/c6/3e/48599a38009ca60ff82a6f38c8a621ce3c0286aa7397c7d79e741bd9060e/polars_runtime_32-1.40.1-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:d249b3743e05986060cec0a7aaa542d020df6c6b876e556023a310efd581f9be", size = 46367542, upload-time = "2026-04-22T19:14:32.433Z" },
+    { url = "https://files.pythonhosted.org/packages/43/e9/384bc069367a1a36ee31c13782c178dbd039b2b873b772d4a0fc23a2373d/polars_runtime_32-1.40.1-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5987b30e7aa1059d069498496e8dda35afd592b0ac3d46ed87e3ff8df1ad652c", size = 50252104, upload-time = "2026-04-22T19:14:35.945Z" },
+    { url = "https://files.pythonhosted.org/packages/15/ef/7d57ceb0651af74194e97ed6583e148d352f03d696090221b8059cdfc90b/polars_runtime_32-1.40.1-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8d7f42a8b3f16fc66002cc0f6516f7dd7653396886ae0ed362ab95c0b3408b59", size = 56250788, upload-time = "2026-04-22T19:14:39.743Z" },
+    { url = "https://files.pythonhosted.org/packages/10/0f/e4b3ffc748827a14a474ec9c42e45c066050e440fec57e914091d9adda75/polars_runtime_32-1.40.1-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:e5f7becc237a7ec9d9a10878dc8e54b73bbf4e2d94a2991c37d7a0b38590d8f9", size = 50432590, upload-time = "2026-04-22T19:14:43.388Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/0b/b8d95fbed869fa4caabe9c400e4210374913b376e925e96fdcfa9be6416b/polars_runtime_32-1.40.1-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:992d14cf191dde043d36fbdbc98a65e43fbc7e9a5024cecd45f838ac4988c1ee", size = 54155564, upload-time = "2026-04-22T19:14:47.239Z" },
+    { url = "https://files.pythonhosted.org/packages/06/d9/d091d8fb5cbed5e9536adfed955c4c89987a4cc3b8e73ae4532402b91c74/polars_runtime_32-1.40.1-cp310-abi3-win_amd64.whl", hash = "sha256:f78bb2abd00101cbb23cc0cb068f7e36e081057a15d2ec2dde3dda280709f030", size = 51829755, upload-time = "2026-04-22T19:14:50.85Z" },
+    { url = "https://files.pythonhosted.org/packages/65/ad/b33c3022a394f3eb55c3310597cec615412a8a33880055eee191d154a628/polars_runtime_32-1.40.1-cp310-abi3-win_arm64.whl", hash = "sha256:b5cbfaf6b085b420b4bfcbe24e8f665076d1cccfdb80c0484c02a023ce205537", size = 45822104, upload-time = "2026-04-22T19:14:54.192Z" },
+]
+
+[[package]]
 name = "prompt-toolkit"
 version = "3.0.52"
 source = { registry = "https://pypi.org/simple" }
@@ -1181,6 +1209,32 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/48/47/e761c254f410c023a469284a9bc210933e18588ca87706ae93002c05114c/pynacl-1.6.2-cp38-abi3-win32.whl", hash = "sha256:5811c72b473b2f38f7e2a3dc4f8642e3a3e9b5e7317266e4ced1fba85cae41aa", size = 227421, upload-time = "2026-01-01T17:32:33.076Z" },
     { url = "https://files.pythonhosted.org/packages/41/ad/334600e8cacc7d86587fe5f565480fde569dfb487389c8e1be56ac21d8ac/pynacl-1.6.2-cp38-abi3-win_amd64.whl", hash = "sha256:62985f233210dee6548c223301b6c25440852e13d59a8b81490203c3227c5ba0", size = 239754, upload-time = "2026-01-01T17:32:34.557Z" },
     { url = "https://files.pythonhosted.org/packages/29/7d/5945b5af29534641820d3bd7b00962abbbdfee84ec7e19f0d5b3175f9a31/pynacl-1.6.2-cp38-abi3-win_arm64.whl", hash = "sha256:834a43af110f743a754448463e8fd61259cd4ab5bbedcf70f9dabad1d28a394c", size = 184801, upload-time = "2026-01-01T17:32:36.309Z" },
+]
+
+[[package]]
+name = "pynamodb"
+version = "6.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "botocore" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/af/0b/35d24cdfe532fd9c774c184fbd09118b0a8c94eb51ca9598c0c5ef21174d/pynamodb-6.1.0.tar.gz", hash = "sha256:c7d09700ace9f428e67ecf73fa867633c632de3acf402b2c7c136be695afda79", size = 96283, upload-time = "2025-06-02T17:32:59.367Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d4/86/71e355d232f28adb50c89b806b018548c095a6cf3d631b645918f415212a/pynamodb-6.1.0-py3-none-any.whl", hash = "sha256:9c0f1a0f177208640b2336ed56c557c5187b0012d356e9c7399c3923c5f93c7f", size = 61685, upload-time = "2025-06-02T17:32:57.488Z" },
+]
+
+[[package]]
+name = "pynamodb-session-manager"
+version = "0.1.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "boto-session-manager" },
+    { name = "botocore" },
+    { name = "pynamodb" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7b/dd/cb46abb3788efed32395bd111431c011987d22ca20760d7bb8e96e5b39cc/pynamodb_session_manager-0.1.2.tar.gz", hash = "sha256:3435f1a7eadcd6479087a02108b758eea74e8d9d5b38310cd6b0831502e2e169", size = 10693, upload-time = "2025-06-27T14:41:23.683Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/59/32/6029da7d50e497efb0ab58989a30d7a53ed9f60287572c4af3d4be94a79d/pynamodb_session_manager-0.1.2-py3-none-any.whl", hash = "sha256:864b296d79216538c14652a04281ede99120dd8bb9506f55810abb6727acc009", size = 10566, upload-time = "2025-06-27T14:41:22.8Z" },
 ]
 
 [[package]]
@@ -1790,7 +1844,10 @@ dependencies = [
     { name = "boltons" },
     { name = "boto-session-manager" },
     { name = "boto3" },
+    { name = "polars" },
     { name = "pydantic" },
+    { name = "pynamodb" },
+    { name = "pynamodb-session-manager" },
     { name = "python-dotenv" },
     { name = "s3pathlib" },
     { name = "soft-deps" },
@@ -1845,9 +1902,12 @@ requires-dist = [
     { name = "ipython", marker = "extra == 'doc'", specifier = ">=8.18.1,<8.19.0" },
     { name = "moto", marker = "extra == 'test'", specifier = ">=5.1.21,<6.0.0" },
     { name = "nbsphinx", marker = "extra == 'doc'", specifier = ">=0.8.12,<1.0.0" },
+    { name = "polars", specifier = ">=1.39.3,<2.0.0" },
     { name = "pydantic", specifier = ">=2.13.3,<3.0.0" },
     { name = "pygithub", marker = "extra == 'mise'", specifier = ">=2.8.0,<3.0.0" },
     { name = "pygments", marker = "extra == 'doc'", specifier = ">=2.18.0,<3.0.0" },
+    { name = "pynamodb", specifier = ">=6.1.0,<7.0.0" },
+    { name = "pynamodb-session-manager", specifier = ">=0.1.2,<1.0.0" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.2.2,<9.0.0" },
     { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=6.0.0,<7.0.0" },
     { name = "python-dotenv", specifier = ">=1.2.2,<2.0.0" },

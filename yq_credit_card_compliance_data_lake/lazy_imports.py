@@ -54,3 +54,12 @@ except ImportError as e:  # pragma: no cover
         name="rstobj",
         error_message=f"please do 'make install-dev'",
     )
+
+try:
+    import faker as _faker_module
+    faker = _faker_module
+except ImportError as e:  # pragma: no cover
+    faker = MissingDependency(
+        name="faker",
+        error_message=f"please do 'uv sync --extra dev'",
+    )

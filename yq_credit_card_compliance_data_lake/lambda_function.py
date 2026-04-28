@@ -20,5 +20,8 @@ When adding a new Lambda function, import its ``lambda_handler`` here with an
 alias and register it in ``config_00_main.py``.
 """
 
+# fmt: off
 from yq_credit_card_compliance_data_lake.lbd.hello import lambda_handler as hello_handler
 from yq_credit_card_compliance_data_lake.lbd.s3sync import lambda_handler as s3sync_handler
+from yq_credit_card_compliance_data_lake.lbd.transaction_ingestion import lambda_handler as transaction_ingestion_handler
+# fmt: on

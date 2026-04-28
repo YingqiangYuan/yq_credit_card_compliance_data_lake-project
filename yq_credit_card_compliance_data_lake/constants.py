@@ -81,3 +81,36 @@ class Severity(enum.StrEnum):
 
     ERROR = "ERROR"
     WARNING = "WARNING"
+
+
+# ------------------------------------------------------------------------------
+# Pipeline metadata — values stored on every DynamoDB ``pipeline-metadata`` row
+# ------------------------------------------------------------------------------
+class PipelineStatus(enum.StrEnum):
+    """Lifecycle state of a pipeline run.
+
+    - ``RUNNING`` : row written at handler entry, before any work happens.
+    - ``SUCCESS`` : every record in the batch ended up in Bronze.
+    - ``PARTIAL`` : at least one record landed in Quarantine but the batch
+      itself completed normally; **not** treated as a failure for paging.
+    - ``FAILED``  : exception escaped the handler — the batch will be retried
+      by the Event Source Mapping and (after exhausting retries) sent to the
+      DLQ.
+    """
+
+    RUNNING = "RUNNING"
+    SUCCESS = "SUCCESS"
+    PARTIAL = "PARTIAL"
+    FAILED = "FAILED"
+
+
+class PipelineName(enum.StrEnum):
+    """Stable identifiers used as the ``pipeline_name`` partition key in the
+    DynamoDB metadata table.
+
+    Treat values as **append-only**: once a name is in production, never
+    rename it — that would orphan all historical metadata rows.  New
+    pipelines (Phase 6 Kafka, Phase 7 batch sources) append entries here.
+    """
+
+    TRANSACTION_INGESTION = "txn-realtime-ingestion"

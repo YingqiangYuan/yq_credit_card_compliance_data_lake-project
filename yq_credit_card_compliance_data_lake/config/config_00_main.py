@@ -98,3 +98,22 @@ class Config(
         :class:`TestStack`, deploy-on-demand to keep the bill near zero.
         """
         return f"{self.kinesis_stream_transaction}-test"
+
+    # --------------------------------------------------------------------------
+    # DynamoDB tables
+    # --------------------------------------------------------------------------
+    @property
+    def dynamodb_table_pipeline_metadata(self) -> str:
+        """DynamoDB table tracking every pipeline run (Phase 4+).
+
+        Schema and rationale are described in doc1 §6.  PK ``pipeline_name``
+        + SK ``run_id`` lets us answer "show me the last N runs of pipeline
+        X" off the main key directly; a ``status-index`` GSI handles "show
+        me all FAILED runs in the past 24h" without a full scan.
+
+        The pynamodb model lives in
+        ``data_ingestion.dynamodb_table.PipelineMetadata`` and hardcodes
+        ``Meta.table_name`` to the same string this property returns; a
+        sync-test under ``tests/config/`` asserts the two stay aligned.
+        """
+        return f"{self.project_name_slug}-pipeline-metadata"

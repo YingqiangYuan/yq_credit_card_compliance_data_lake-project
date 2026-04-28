@@ -74,6 +74,7 @@ dev = [
     "boto3-stubs[cloudformation,s3,lambda,iam]>=1.42.95,<2.0.0", # Boto3 type stubs for S3, version range should match boto3
     "simple-aws-lambda>=0.2.2,<1.0.0", # AWS Lambda Powertools for Python
     "aws-lbd-art-builder-uv[upload,publish]>=0.1.1,<1.0.0", # Build AWS Lambda deployment package
+    "Faker>=40.14.1,<41.0.0",
 ]
 
 # ------------------------------------------------------------------------------

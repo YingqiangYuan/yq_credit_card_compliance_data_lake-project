@@ -502,6 +502,18 @@ wheels = [
 ]
 
 [[package]]
+name = "faker"
+version = "40.15.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "tzdata", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7f/13/6741787bd91c4109c7bed047d68273965cd52ce8a5f773c471b949334b6d/faker-40.15.0.tar.gz", hash = "sha256:20f3a6ec8c266b74d4c554e34118b21c3c2056c0b4a519d15c8decb3a4e6e795", size = 1967447, upload-time = "2026-04-17T20:05:27.555Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a7/a7/a600f8f30d4505e89166de51dd121bd540ab8e560e8cf0901de00a81de8c/faker-40.15.0-py3-none-any.whl", hash = "sha256:71ab3c3370da9d2205ab74ffb0fd51273063ad562b3a3bb69d0026a20923e318", size = 2004447, upload-time = "2026-04-17T20:05:25.437Z" },
+]
+
+[[package]]
 name = "fastjsonschema"
 version = "2.21.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1675,6 +1687,15 @@ wheels = [
 ]
 
 [[package]]
+name = "tzdata"
+version = "2026.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ba/19/1b9b0e29f30c6d35cb345486df41110984ea67ae69dddbc0e8a100999493/tzdata-2026.2.tar.gz", hash = "sha256:9173fde7d80d9018e02a662e168e5a2d04f87c41ea174b139fbef642eda62d10", size = 198254, upload-time = "2026-04-24T15:22:08.651Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ce/e4/dccd7f47c4b64213ac01ef921a1337ee6e30e8c6466046018326977efd95/tzdata-2026.2-py2.py3-none-any.whl", hash = "sha256:bbe9af844f658da81a5f95019480da3a89415801f6cc966806612cc7169bffe7", size = 349321, upload-time = "2026-04-24T15:22:05.876Z" },
+]
+
+[[package]]
 name = "urllib3"
 version = "2.6.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1781,6 +1802,7 @@ dependencies = [
 dev = [
     { name = "aws-lbd-art-builder-uv", extra = ["publish", "upload"] },
     { name = "boto3-stubs", extra = ["cloudformation", "iam", "lambda", "s3"] },
+    { name = "faker" },
     { name = "rich" },
     { name = "simple-aws-lambda" },
 ]
@@ -1817,6 +1839,7 @@ requires-dist = [
     { name = "boto3", specifier = ">=1.42.95,<2.0.0" },
     { name = "boto3-stubs", extras = ["cloudformation", "s3", "lambda", "iam"], marker = "extra == 'dev'", specifier = ">=1.42.95,<2.0.0" },
     { name = "docfly", marker = "extra == 'doc'", specifier = "==3.0.3" },
+    { name = "faker", marker = "extra == 'dev'", specifier = ">=40.14.1,<41.0.0" },
     { name = "furo", marker = "extra == 'doc'", specifier = "==2024.8.6" },
     { name = "httpx", marker = "extra == 'mise'", specifier = ">=0.28.0,<1.0.0" },
     { name = "ipython", marker = "extra == 'doc'", specifier = ">=8.18.1,<8.19.0" },

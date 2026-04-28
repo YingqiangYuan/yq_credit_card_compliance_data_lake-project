@@ -98,3 +98,63 @@ class OneS3Mixin:  # pragma: no cover
     def s3dir_target(self: "One") -> S3Path:
         """S3 directory used as the *target* location for the s3sync Lambda function."""
         return self.s3dir_data.joinpath("target").to_dir()
+
+    # --------------------------------------------------------------------------
+    # Data-lake medallion layout
+    #
+    # Layer-level directories (bronze/silver/gold/quarantine) follow the standard
+    # medallion architecture; ``landing`` and ``manifest`` are batch-pipeline
+    # staging areas described in doc1 §2.
+    #
+    # Source-specific subdirectories (e.g., ``s3dir_bronze_transactions``) are
+    # added per phase as each ingestion source is implemented — Phase 2 covers
+    # only Transaction; FraudAlert / batch sources land in later phases.
+    # --------------------------------------------------------------------------
+    @cached_property
+    def s3dir_bronze(self: "One") -> S3Path:
+        """Bronze layer — raw, immutable records as ingested. ``${s3dir_data}/bronze/``."""
+        return self.s3dir_data.joinpath("bronze").to_dir()
+
+    @cached_property
+    def s3dir_silver(self: "One") -> S3Path:
+        """Silver layer — cleaned, conformed, deduplicated. ``${s3dir_data}/silver/``."""
+        return self.s3dir_data.joinpath("silver").to_dir()
+
+    @cached_property
+    def s3dir_gold(self: "One") -> S3Path:
+        """Gold layer — aggregated, business-ready datasets. ``${s3dir_data}/gold/``."""
+        return self.s3dir_data.joinpath("gold").to_dir()
+
+    @cached_property
+    def s3dir_quarantine(self: "One") -> S3Path:
+        """Quarantine — records that failed ERROR-level data-quality checks.
+
+        Mirrored per source under here (e.g. ``quarantine/transactions/``) so
+        each ingestion path can drop bad records into its own subfolder.
+        """
+        return self.s3dir_data.joinpath("quarantine").to_dir()
+
+    @cached_property
+    def s3dir_landing(self: "One") -> S3Path:
+        """Landing zone for batch sources — files awaiting validation/ETL. See doc1 §2."""
+        return self.s3dir_data.joinpath("landing").to_dir()
+
+    @cached_property
+    def s3dir_manifest(self: "One") -> S3Path:
+        """Per-batch manifest files (checksum, expected row count, schema version)."""
+        return self.s3dir_data.joinpath("manifest").to_dir()
+
+    # --- Per-source subdirectories — Phase 2 (Transaction only) ---
+    @cached_property
+    def s3dir_bronze_transactions(self: "One") -> S3Path:
+        """Bronze for Kinesis transaction firehose. ``${s3dir_bronze}/transactions/``.
+
+        Records are partitioned underneath by ``year=/month=/day=/hour=`` —
+        partitioning is added by the consumer Lambda (Phase 4), not here.
+        """
+        return self.s3dir_bronze.joinpath("transactions").to_dir()
+
+    @cached_property
+    def s3dir_quarantine_transactions(self: "One") -> S3Path:
+        """Quarantine for transaction records that failed ERROR-level checks."""
+        return self.s3dir_quarantine.joinpath("transactions").to_dir()

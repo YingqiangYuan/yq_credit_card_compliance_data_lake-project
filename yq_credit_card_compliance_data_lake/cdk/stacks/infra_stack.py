@@ -1,20 +1,22 @@
 # -*- coding: utf-8 -*-
 
 """
-Infrastructure stack — long-lived, shared resources (IAM roles, policies).
+Infrastructure stack — long-lived, shared resources (IAM, production data
+streams).
 
 **Why a separate stack from Lambda?**
 
 CDK deploys each stack independently.  Infrastructure resources like IAM roles
-change **rarely** (only when permissions need updating), while Lambda function
-code changes **frequently** (every feature iteration).  Splitting them into two
-stacks gives us:
+and Kinesis streams change **rarely**, while Lambda function code changes
+**frequently** (every feature iteration).  Splitting them into two stacks gives
+us:
 
 1. **Faster deploys** — the common case (code change) only touches the Lambda
    stack.  No need to diff or re-deploy IAM resources on every push.
 2. **Blast-radius isolation** — a bad Lambda deploy cannot accidentally modify
-   IAM permissions, and vice versa.  Each stack has its own CloudFormation
-   changeset and rollback boundary.
+   IAM permissions or destroy a stream that downstream consumers depend on, and
+   vice versa.  Each stack has its own CloudFormation changeset and rollback
+   boundary.
 3. **Cross-stack references** — the infra stack exports the IAM role ARN via
    ``CfnOutput``.  The Lambda stack imports it with ``Fn.import_value``.  This
    is a standard CloudFormation pattern for decoupling stacks that share
@@ -27,6 +29,7 @@ the execution order is unambiguous.
 
 import aws_cdk as cdk
 from aws_cdk import aws_iam as iam
+from aws_cdk import aws_kinesis as kinesis
 
 from constructs import Construct
 
@@ -49,6 +52,7 @@ class InfraStack(cdk.Stack):
         )
 
         self.s01_create_iam_roles()
+        # self.s02_create_kinesis_streams()
 
     def s01_create_iam_roles(self):
         """
@@ -120,4 +124,28 @@ class InfraStack(cdk.Stack):
             "IamRoleForLambdaArn",
             value=self.iam_role_for_lambda.role_arn,
             export_name=f"{self.one.config.project_name_slug}-lambda-role-arn",
+        )
+
+    def s02_create_kinesis_streams(self):
+        """Production Kinesis stream(s).
+
+        Per doc1 §1.1: 4 shards (peak ~800 TPS with 10x headroom), 7-day
+        retention so a stalled consumer can catch up after multi-day outages.
+        Provisioned mode is intentional — at this scale it is cheaper than
+        on-demand and gives predictable per-shard throughput limits.
+        """
+        self.kinesis_stream_transaction = kinesis.Stream(
+            scope=self,
+            id="KinesisStreamTransaction",
+            stream_name=self.one.config.kinesis_stream_transaction,
+            retention_period=cdk.Duration.days(7),
+            stream_mode=kinesis.StreamMode.ON_DEMAND,
+            removal_policy=cdk.RemovalPolicy.DESTROY,
+        )
+
+        self.output_kinesis_stream_transaction_arn = cdk.CfnOutput(
+            self,
+            "KinesisStreamTransactionArn",
+            value=self.kinesis_stream_transaction.stream_arn,
+            export_name=f"{self.one.config.project_name_slug}-transaction-stream-arn",
         )

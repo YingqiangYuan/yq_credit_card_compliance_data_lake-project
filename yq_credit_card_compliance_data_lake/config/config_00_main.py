@@ -75,3 +75,26 @@ class Config(
         return {
             "PROJECT_NAME": self.project_name,
         }
+
+    # --------------------------------------------------------------------------
+    # Kinesis stream names
+    # --------------------------------------------------------------------------
+    # AWS resource names use ``-`` (slug form), not ``_`` — kept consistent with
+    # ``cloudformation_stack_name`` and IAM role naming elsewhere in this file.
+    @property
+    def kinesis_stream_transaction(self) -> str:
+        """Production Kinesis stream for the credit-card transaction firehose.
+
+        Provisioned at 4 shards per doc1 §1.1 (handles peak ~800 TPS with 10x
+        headroom). Provisioned-mode pricing: idle cost ≈ $44/mo for 4 shards.
+        """
+        return f"{self.project_name_slug}-transaction-stream"
+
+    @property
+    def kinesis_stream_transaction_test(self) -> str:
+        """Auxiliary Kinesis stream used by Phase 3 e2e smoke scripts.
+
+        Provisioned at 1 shard (≈ $11/mo if left running). Lives in the
+        :class:`TestStack`, deploy-on-demand to keep the bill near zero.
+        """
+        return f"{self.kinesis_stream_transaction}-test"

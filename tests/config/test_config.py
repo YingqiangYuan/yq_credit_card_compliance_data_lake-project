@@ -27,6 +27,10 @@ def test():
 
     _ = config.lambda_layer_name
 
+    # Kinesis stream names — Phase 2
+    assert config.kinesis_stream_transaction == f"{config.project_name_slug}-transaction-stream"
+    assert config.kinesis_stream_transaction_test == f"{config.kinesis_stream_transaction}-test"
+
     for lbd_func in [
         config.lbd_func_hello,
         config.lbd_func_s3sync,

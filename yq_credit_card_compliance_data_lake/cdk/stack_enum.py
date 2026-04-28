@@ -64,6 +64,20 @@ class StackEnum:
             one=one,
         )
 
+    @cached_property
+    def test_stack(self):
+        """Deploy-on-demand stack for auxiliary resources used by e2e smoke
+        scripts (Kinesis test stream today; expect more later).
+
+        Not a separate environment — see ``stacks/test_stack.py`` docstring.
+        """
+        from .stacks.test_stack import TestStack
+
+        return TestStack(
+            scope=self.app,
+            one=one,
+        )
+
 
 # Create the global stack enumeration instance
 app = cdk.App()

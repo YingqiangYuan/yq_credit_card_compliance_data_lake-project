@@ -43,9 +43,13 @@ def produce(
     :param interval_seconds: sleep between bursts.
     :param total_bursts: number of bursts to emit; ``None`` runs forever
         until ``KeyboardInterrupt``.
-    :param purge_first: drain leftovers from the stream once before the
-        first burst.  Default ``True`` so the next consumer run sees a
-        clean slate.
+    :param purge_first: drain leftover records from the stream once before
+        the first burst, as an audit step.  Note: Kinesis has no
+        per-record delete API, so this is a "read-and-discard" pass — it
+        does NOT prevent a downstream ``TRIM_HORIZON`` consumer from
+        re-seeing those records.  The default e2e ``consume()`` uses
+        ``LATEST``, which already sidesteps stale data, so flipping this
+        off (``purge_first=False``) is fine for routine smoke runs.
     """
     stream = get_test_stream_name()
 

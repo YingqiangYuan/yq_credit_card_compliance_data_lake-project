@@ -65,9 +65,15 @@ class Consumer:
         is effectively forever.
 
         :param iterator_type: where to start.  ``LATEST`` (default) reads
-            only records that arrive after this call begins.
+            only records that arrive **after** this call returns; this is
+            the right choice for live-tail e2e tests where the consumer is
+            started first and the producer feeds it afterwards.
             ``TRIM_HORIZON`` reads from the oldest record still retained —
-            useful when you want to catch records produced moments before.
+            note that "retained" means everything within the stream's
+            retention window, not just records produced this session.
+            Kinesis has no per-record delete API; previous "purges" do not
+            erase records, so a fresh ``TRIM_HORIZON`` iterator will re-see
+            everything that has been written within the retention window.
         :param wait_seconds: idle sleep between empty polling passes.
         :param limit: max records per ``GetRecords`` call.
         """

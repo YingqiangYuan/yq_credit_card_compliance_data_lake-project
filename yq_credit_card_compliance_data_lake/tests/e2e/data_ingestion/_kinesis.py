@@ -25,11 +25,20 @@ def get_test_stream_name() -> str:
 
 
 def purge_stream(stream_name: T.Optional[str] = None) -> int:
-    """Drain every shard and discard records.  Returns total purged.
+    """Drain every shard with a side iterator and discard the records.
+    Returns the total count read.
 
-    Called automatically at the start of :func:`producer.produce` so the
-    follow-up :func:`consumer.consume` only sees freshly produced records.
-    Safe to call when the stream is already empty (returns 0).
+    **Caveat**: Kinesis has no per-record delete API.  This function reads
+    records into oblivion using its own iterator, but the records remain
+    in the stream until the retention window (24 hours for the test
+    stream) expires.  A *separate* consumer that subsequently starts a
+    fresh ``TRIM_HORIZON`` iterator will see those same records again.
+
+    Useful mainly as an audit step ("how many records were sitting in the
+    stream before I produced?") and as a sanity check against the
+    producer's own output count.  The default e2e ``consume()`` flow uses
+    ``LATEST`` to avoid stale-data flooding entirely, which makes this
+    purge call cosmetic for that workflow.
     """
     stream = stream_name or get_test_stream_name()
     client = one.kinesis_client

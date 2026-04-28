@@ -8,20 +8,24 @@ distribution helpers and validation-retry plumbing live in the top-level
 ``faker/`` subpackage; only domain knowledge (MCC pools, channel weights,
 card-id format) belongs here.
 
-Imports of the third-party ``Faker`` library go through ``..lazy_imports`` so
-that this module remains import-safe inside the AWS Lambda runtime, where
-``Faker`` is not installed.
+This module deliberately uses only the stdlib ``random`` module plus our own
+distribution helpers — no dependency on the third-party ``Faker`` library.
+That keeps the ``data_ingestion`` package installable without ``[dev]``
+extras: ``TransactionFaker`` is callable from production-style code paths
+(e.g. an e2e producer running in CI) without ``ImportError``.
+
+If a future faker class genuinely needs ``Faker`` primitives (e.g. realistic
+addresses for a customer faker), import it from ``..lazy_imports`` and add
+``Faker`` to the ``[project]`` main dependencies first.
 """
 
 import random
 import string
-import typing as T
 from datetime import datetime, timedelta, UTC
 from uuid import uuid4
 
 from ..constants import AuthStatus, Channel, Currency
 from ..faker.api import weighted_choice, long_tail_amount, make_with_retry
-from ..lazy_imports import faker as faker_lib
 from .models import Transaction
 
 
@@ -90,10 +94,6 @@ class TransactionFaker:
         max_validation_attempts: int = 5,
     ):
         self._rng = random.Random(seed)
-        self._fake = faker_lib.Faker(locale="en_US")
-        if seed is not None:
-            self._fake.seed_instance(seed)
-
         self._timestamp_drift_seconds = timestamp_drift_seconds
         self._max_validation_attempts = max_validation_attempts
 

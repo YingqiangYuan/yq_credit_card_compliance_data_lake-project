@@ -32,7 +32,7 @@ def _format_record(idx: int, txn: dict) -> str:
 
 
 def consume(
-    iterator_type: str = "TRIM_HORIZON",
+    iterator_type: str = "LATEST",
     wait_seconds: float = 1.0,
     limit: int = 500,
 ) -> int:
@@ -40,11 +40,19 @@ def consume(
 
     Returns the number of records read before the user pressed ``Ctrl+C``.
 
-    :param iterator_type: where to start reading.  Default ``TRIM_HORIZON``
-        (oldest available) so this picks up records produced moments before
-        the consumer started — what an operator usually wants for a
-        side-by-side smoke test.  Pass ``"LATEST"`` to only see records that
-        arrive after the consumer is up.
+    :param iterator_type: where to start reading.  Default ``LATEST`` —
+        only records produced *after* the consumer starts are surfaced.
+        This is the right default because:
+
+        - Kinesis has no per-record delete API, so any previous session's
+          records still in the retention window would otherwise flood a
+          ``TRIM_HORIZON`` consumer at startup.
+        - The intended workflow is two-terminal: start consumer first,
+          then start producer in another terminal — consumer should only
+          see what the producer is currently emitting.
+
+        Pass ``"TRIM_HORIZON"`` only when you genuinely want a forensic dump
+        of every record still retained in the stream.
     :param wait_seconds: idle sleep between empty polling passes.
     :param limit: max records per ``GetRecords`` call.
     """

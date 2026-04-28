@@ -33,7 +33,7 @@ def main() -> None:
         help="records per burst (default: 10)",
     )
     parser.add_argument(
-        "-n", "--interval", type=float, default=1.0,
+        "-n", "--interval", type=float, default=5.0,
         help="seconds between bursts (default: 1.0)",
     )
     parser.add_argument(

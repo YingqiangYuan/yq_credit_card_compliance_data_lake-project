@@ -23,12 +23,13 @@ def main() -> None:
         description="Long-poll the test Kinesis stream and pretty-print every record."
     )
     parser.add_argument(
-        "--from-latest", action="store_true",
-        help="start at LATEST instead of TRIM_HORIZON (default reads from oldest)",
+        "--from-beginning", action="store_true",
+        help="read from TRIM_HORIZON (every record still in retention); "
+             "default LATEST reads only records produced after consumer starts",
     )
     parser.add_argument(
-        "--wait", type=float, default=1.0,
-        help="seconds to sleep between empty polls (default: 1.0)",
+        "--wait", type=float, default=5.0,
+        help="seconds to sleep between empty polls (default: 5.0)",
     )
     parser.add_argument(
         "--limit", type=int, default=500,
@@ -37,7 +38,7 @@ def main() -> None:
     args = parser.parse_args()
 
     consume_transactions(
-        iterator_type="LATEST" if args.from_latest else "TRIM_HORIZON",
+        iterator_type="TRIM_HORIZON" if args.from_beginning else "LATEST",
         wait_seconds=args.wait,
         limit=args.limit,
     )

@@ -56,8 +56,7 @@ except ImportError as e:  # pragma: no cover
     )
 
 try:
-    import fakers as _faker_module
-    faker = _faker_module
+    import faker
 except ImportError as e:  # pragma: no cover
     faker = MissingDependency(
         name="faker",

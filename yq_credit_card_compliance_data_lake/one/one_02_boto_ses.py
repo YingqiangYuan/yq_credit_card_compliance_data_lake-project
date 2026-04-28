@@ -60,3 +60,7 @@ class OneBotoSesMixin:  # pragma: no cover
     @cached_property
     def cloudformation_client(self: "One"):
         return self.boto_ses.client("cloudformation")
+
+    @cached_property
+    def kinesis_client(self: "One"):
+        return self.boto_ses.client("kinesis")

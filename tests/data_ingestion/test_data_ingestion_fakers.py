@@ -97,6 +97,6 @@ if __name__ == "__main__":
 
     run_cov_test(
         __file__,
-        "yq_credit_card_compliance_data_lake.data_ingestion.faker",
+        "yq_credit_card_compliance_data_lake.data_ingestion.fakers",
         preview=False,
     )

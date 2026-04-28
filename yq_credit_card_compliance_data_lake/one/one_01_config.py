@@ -30,6 +30,7 @@ class OneConfigMixin:
         if runtime.is_aws_lambda:
             lbd_func_hello = None
             lbd_func_s3sync = None
+            lbd_func_transaction_ingestion = None
         else:
             from dotenv import load_dotenv
 
@@ -54,6 +55,15 @@ class OneConfigMixin:
                     os.environ["LBD_FUNC_LAYER_VERSION"],
                 ],
             )
+            lbd_func_transaction_ingestion = LbdFunc(
+                short_name=os.environ["LBD_FUNC_TRANSACTION_INGESTION_SHORT_NAME"],
+                handler=os.environ["LBD_FUNC_TRANSACTION_INGESTION_HANDLER"],
+                timeout=int(os.environ["LBD_FUNC_TRANSACTION_INGESTION_TIMEOUT"]),
+                memory=int(os.environ["LBD_FUNC_TRANSACTION_INGESTION_MEMORY"]),
+                layers=[
+                    os.environ["LBD_FUNC_LAYER_VERSION"],
+                ],
+            )
 
         config = Config(
             project_name=os.environ["PROJECT_NAME"],
@@ -62,10 +72,12 @@ class OneConfigMixin:
             lbd_func_py_ver=os.environ.get("LBD_FUNC_PY_VER"),
             lbd_func_hello=lbd_func_hello,
             lbd_func_s3sync=lbd_func_s3sync,
+            lbd_func_transaction_ingestion=lbd_func_transaction_ingestion,
         )
 
         if runtime.is_aws_lambda is False:
             config.lbd_func_hello._config = config
             config.lbd_func_s3sync._config = config
+            config.lbd_func_transaction_ingestion._config = config
 
         return config

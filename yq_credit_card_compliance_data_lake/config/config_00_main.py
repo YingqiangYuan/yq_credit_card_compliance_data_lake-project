@@ -32,6 +32,7 @@ class Config(
     lbd_func_py_ver: str | None = Field(default=None)
     lbd_func_hello: LbdFunc | None = Field()
     lbd_func_s3sync: LbdFunc | None = Field()
+    lbd_func_transaction_ingestion: LbdFunc | None = Field()
 
     @property
     def project_name_snake(self) -> str:

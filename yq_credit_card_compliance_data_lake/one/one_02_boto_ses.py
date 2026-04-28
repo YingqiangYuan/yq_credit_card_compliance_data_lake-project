@@ -9,6 +9,7 @@ import typing as T
 from functools import cached_property
 
 import boto3
+from boto_session_manager import BotoSesManager
 
 from ..runtime import runtime
 
@@ -22,14 +23,18 @@ class OneBotoSesMixin:  # pragma: no cover
     """
 
     @cached_property
-    def boto_ses(self: "One") -> boto3.Session:
+    def bsm(self: "One") -> BotoSesManager:
         if runtime.is_aws_lambda:
-            return boto3.Session(region_name=self.config.aws_region)
+            return BotoSesManager(region_name=self.config.aws_region)
         else:
-            return boto3.Session(
+            return BotoSesManager(
                 profile_name=self.config.local_aws_profile,
                 region_name=self.config.aws_region,
             )
+
+    @cached_property
+    def boto_ses(self: "One") -> boto3.Session:
+        return self.bsm.boto_ses
 
     @cached_property
     def aws_region(self: "One") -> str:

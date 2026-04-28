@@ -129,17 +129,18 @@ class InfraStack(cdk.Stack):
     def s02_create_kinesis_streams(self):
         """Production Kinesis stream(s).
 
-        Per doc1 §1.1: 4 shards (peak ~800 TPS with 10x headroom), 7-day
-        retention so a stalled consumer can catch up after multi-day outages.
-        Provisioned mode is intentional — at this scale it is cheaper than
-        on-demand and gives predictable per-shard throughput limits.
+        Lightweight demo configuration: 1 PROVISIONED shard, 7-day retention,
+        ``DESTROY`` removal policy.  Original doc1 §1.1 spec called for 4
+        shards to handle ~800 TPS peak, but this project is a portfolio demo
+        and a single shard (1 MB/s, 1000 records/s) is more than enough.
         """
         self.kinesis_stream_transaction = kinesis.Stream(
             scope=self,
             id="KinesisStreamTransaction",
             stream_name=self.one.config.kinesis_stream_transaction,
+            shard_count=1,
             retention_period=cdk.Duration.days(7),
-            stream_mode=kinesis.StreamMode.ON_DEMAND,
+            stream_mode=kinesis.StreamMode.PROVISIONED,
             removal_policy=cdk.RemovalPolicy.DESTROY,
         )
 

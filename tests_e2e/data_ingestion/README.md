@@ -4,17 +4,23 @@ End-to-end smoke scripts that exercise the **real** Kinesis stream provisioned b
 
 ## Architecture
 
-The actual logic lives inside the package at `yq_credit_card_compliance_data_lake/tests/e2e/data_ingestion/`. The two scripts in this directory are thin entry-points: they parse `argv`, then call `produce_transactions()` or `consume_transactions()`.
+Real logic lives in the package; this directory holds two thin entry-point scripts.
 
 ```
-yq_credit_card_compliance_data_lake/tests/e2e/data_ingestion/
-├── _kinesis.py      ← shard discovery, draining, purge_stream()
-├── producer.py      ← produce(n)  — purges first, then generates + sends
-└── consumer.py      ← consume()   — drains every shard, prints each record
+yq_credit_card_compliance_data_lake/
+├── data_ingestion/
+│   ├── producer/                                   ← Phase 1, send_records
+│   └── consumer/                                   ← Phase 3, Consumer class
+│       ├── consumer_00_base.py                     ← iter_shard_ids, drain_shard
+│       └── consumer_01_kinesis.py                  ← Consumer (long-running)
+└── tests/e2e/data_ingestion/
+    ├── _kinesis.py                                 ← purge_stream + stream-name helper
+    ├── producer.py                                 ← produce(burst_size, interval, total_bursts)
+    └── consumer.py                                 ← consume() wraps Consumer with visual log
 
 tests_e2e/data_ingestion/
-├── run_producer.py  ← thin wrapper around produce_transactions
-└── run_consumer.py  ← thin wrapper around consume_transactions
+├── run_producer.py                                 ← argparse → produce_transactions(...)
+└── run_consumer.py                                 ← argparse → consume_transactions(...)
 ```
 
 ## Prerequisites
@@ -24,44 +30,69 @@ tests_e2e/data_ingestion/
 
 ## Lifecycle
 
+The producer and consumer are designed to run **in two terminals concurrently** — start the consumer first, then have the producer send bursts at it.
+
 ```bash
-# 1. Provision the test stream (once per testing session, ~ 30 sec)
+# 1. Provision the test stream (once per session, ~ 30 sec).
+#    1 PROVISIONED shard ≈ $0.015/hour ≈ $0.01 for a 30-min smoke session.
 cd cdk && uv run cdk deploy yq-credit-card-compliance-data-lake-test
 cd ..
 
-# 2. Push N fake transactions. The first step inside produce() is to purge any
-#    leftovers from a previous run, so you never need to run a separate purge.
-uv run python -m tests_e2e.data_ingestion.run_producer          # default 100
-uv run python -m tests_e2e.data_ingestion.run_producer 1500     # 3 batches
-
-# 3. Read them back. Expect to see the same records you just produced.
+# 2. (Terminal A) start the long-poll consumer — blocks, prints records as they arrive
 uv run python -m tests_e2e.data_ingestion.run_consumer
 
-# 4. Tear down — Kinesis bills per stream-hour, even on-demand.
+# 3. (Terminal B) start the burst producer — purges the stream first, then dumps
+#    10 records every 1 second, 10 times (default).
+uv run python -m tests_e2e.data_ingestion.run_producer
+
+# Or: run forever with custom rate
+uv run python -m tests_e2e.data_ingestion.run_producer -k 50 -n 0.5 --forever
+
+# 4. When done, Ctrl+C the consumer and tear down.
 cd cdk && uv run cdk destroy yq-credit-card-compliance-data-lake-test
 ```
+
+## Producer CLI
+
+| Flag | Default | Meaning |
+|------|---------|---------|
+| `-k`, `--burst-size` | 10 | records per burst |
+| `-n`, `--interval` | 1.0 | seconds between bursts |
+| `-t`, `--bursts` | 10 | number of bursts (ignored with `--forever`) |
+| `--forever` | off | run until Ctrl+C |
+| `--no-purge` | off | skip the pre-run drain step |
+
+## Consumer CLI
+
+| Flag | Default | Meaning |
+|------|---------|---------|
+| `--from-latest` | off | read only records arriving after consumer starts (default reads from oldest available, i.e. `TRIM_HORIZON`) |
+| `--wait` | 1.0 | seconds to sleep between empty polls |
+| `--limit` | 500 | max records per `GetRecords` call |
 
 ## What you will see
 
 Both producer and consumer emit one numbered visual log line per record so you can eyeball that the same UUIDs appear on both sides:
 
 ```
-+----- produce 100 transactions → ...transaction-stream-test ------+
-| [001/100] 550e8400-e29b-41d4-a716-446655440000 $    12.34 USD APPROVED  POS        card=41111111… mcc=5411
-| [002/100] e1f4a8c2-...
-...
-+----- send_records --------------+
-| total=100 success=100 failed=0
-+----- producer complete ---------+
-
-+----- consume from ...transaction-stream-test ------+
-| shard shardId-000000000000
++----- produce 10/burst × 10 every 1.0s → ...transaction-stream-test -----+
+| --- burst 1/10 ---
 |   [0001] 550e8400-e29b-41d4-a716-446655440000 $    12.34 USD APPROVED  POS        card=41111111… mcc=5411
 |   [0002] e1f4a8c2-...
-...
-+----- consumer complete — 100 total ----+
+| ...
+|   burst 1: sent=10 failed=0
+| --- burst 2/10 ---
+|   [0011] ...
++----- producer complete — 10 bursts, 100 records --+
+
++----- consume ...transaction-stream-test from=TRIM_HORIZON wait=1.0s limit=500 ----+
+| Ctrl+C to stop
+| [0001] 550e8400-e29b-41d4-a716-446655440000 $    12.34 USD APPROVED  POS        card=41111111… mcc=5411
+| [0002] e1f4a8c2-...
+| ...
++----- consumer stopped — 100 records ----+
 ```
 
 ## Cost
 
-Kinesis on-demand mode: ~$0.04 per stream-hour plus per-GB. A 30-minute smoke session with `cdk destroy` afterwards costs roughly **$0.02**. Leaving the stream up costs about **$30/month** even with zero traffic — please `cdk destroy` when done.
+1 PROVISIONED shard at `$0.015/hour` ≈ **$0.008** for a 30-min smoke session. Leaving the stream up costs about **$11/month** with zero traffic — please `cdk destroy` when done.

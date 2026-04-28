@@ -8,3 +8,6 @@ from .models import Transaction
 from .faker import TransactionFaker
 from .producer.api import send_records
 from .producer.api import SendResult
+from .consumer.api import Consumer
+from .consumer.api import drain_shard
+from .consumer.api import iter_shard_ids

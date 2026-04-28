@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
 
 """
-E2e consumer — drain every shard from ``TRIM_HORIZON`` and emit one numbered
-visual log line per record received.
+E2e consumer — wraps the long-running :class:`Consumer` class with a visual
+log.
+
+Runs forever; stop with ``KeyboardInterrupt``.  Each record received is
+printed on its own numbered line so you can match UUIDs against the producer
+output.
 """
 
 import json
+import typing as T
 
 from ....api import one
+from ....data_ingestion.api import Consumer
 from ....logger import logger
-from ._kinesis import drain_shard, get_test_stream_name, iter_shard_ids
+from ._kinesis import get_test_stream_name
 
 
 def _format_record(idx: int, txn: dict) -> str:
@@ -25,26 +31,43 @@ def _format_record(idx: int, txn: dict) -> str:
     )
 
 
-def consume() -> int:
-    """Run the consumer flow: list shards, drain each, log per record.
+def consume(
+    iterator_type: str = "TRIM_HORIZON",
+    wait_seconds: float = 1.0,
+    limit: int = 500,
+) -> int:
+    """Run the long-running consumer flow.
 
-    Returns the total number of records read across all shards.
+    Returns the number of records read before the user pressed ``Ctrl+C``.
+
+    :param iterator_type: where to start reading.  Default ``TRIM_HORIZON``
+        (oldest available) so this picks up records produced moments before
+        the consumer started — what an operator usually wants for a
+        side-by-side smoke test.  Pass ``"LATEST"`` to only see records that
+        arrive after the consumer is up.
+    :param wait_seconds: idle sleep between empty polling passes.
+    :param limit: max records per ``GetRecords`` call.
     """
     stream = get_test_stream_name()
-    client = one.kinesis_client
+    consumer = Consumer(one.kinesis_client, stream)
 
-    logger.ruler(f"consume from {stream}")
+    logger.ruler(
+        f"consume {stream} from={iterator_type} wait={wait_seconds}s limit={limit}"
+    )
+    logger.info("Ctrl+C to stop")
 
     grand_total = 0
-    for shard_id in iter_shard_ids(client, stream):
-        logger.info(f"shard {shard_id}")
-        shard_total = 0
-        for record in drain_shard(client, stream, shard_id):
-            shard_total += 1
+    try:
+        for record in consumer.iter_records(
+            iterator_type=iterator_type,
+            wait_seconds=wait_seconds,
+            limit=limit,
+        ):
             grand_total += 1
-            txn = json.loads(record["Data"])
-            logger.info(_format_record(grand_total, txn), indent=1)
-        logger.info(f"shard {shard_id}: {shard_total} records")
+            txn: dict[str, T.Any] = json.loads(record["Data"])
+            logger.info(_format_record(grand_total, txn))
+    except KeyboardInterrupt:
+        pass
 
-    logger.ruler(f"consumer complete — {grand_total} total")
+    logger.ruler(f"consumer stopped — {grand_total} records")
     return grand_total

@@ -64,13 +64,19 @@ class TestStack(cdk.Stack):
         ``removal_policy=DESTROY`` lets ``cdk destroy`` actually delete the
         stream — opposite of the production stream which we never want to lose
         accidentally.
+
+        **Mode = PROVISIONED, shard_count = 1.**  ON_DEMAND mode starts every
+        new stream at 4 shards (~$0.04/hour base + per-GB), which is overkill
+        for hand-driven smoke traffic.  A single PROVISIONED shard at
+        $0.015/hour is the cheapest possible Kinesis configuration.
         """
         self.kinesis_stream_transaction_test = kinesis.Stream(
             scope=self,
             id="KinesisStreamTransactionTest",
             stream_name=self.one.config.kinesis_stream_transaction_test,
+            shard_count=1,
             retention_period=cdk.Duration.hours(24),
-            stream_mode=kinesis.StreamMode.ON_DEMAND,
+            stream_mode=kinesis.StreamMode.PROVISIONED,
             removal_policy=cdk.RemovalPolicy.DESTROY,
         )
 

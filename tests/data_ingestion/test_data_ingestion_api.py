@@ -13,6 +13,16 @@ def test():
     _ = api.TransactionFaker
     _ = api.send_records
     _ = api.SendResult
+    _ = api.Consumer
+    _ = api.drain_shard
+    _ = api.iter_shard_ids
+    # Phase 4 additions
+    _ = api.decode_kinesis_records
+    _ = api.ValidationResult
+    _ = api.validate_transaction
+    _ = api.build_partition_path
+    _ = api.write_ndjson_to_s3
+    _ = api.PipelineMetadata
 
 
 if __name__ == "__main__":

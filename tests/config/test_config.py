@@ -31,6 +31,23 @@ def test():
     assert config.kinesis_stream_transaction == f"{config.project_name_slug}-transaction-stream"
     assert config.kinesis_stream_transaction_test == f"{config.kinesis_stream_transaction}-test"
 
+    # DynamoDB tables — Phase 4.  This Config property is the source of
+    # truth; ``data_ingestion.dynamodb_table.PipelineMetadata.Meta.table_name``
+    # hardcodes the same string, and the assertion below guards against the
+    # two drifting apart (see dynamodb_table.py module docstring for why
+    # both exist).
+    from yq_credit_card_compliance_data_lake.data_ingestion.dynamodb_table import (
+        PipelineMetadata,
+    )
+    assert (
+        config.dynamodb_table_pipeline_metadata
+        == f"{config.project_name_slug}-pipeline-metadata"
+    )
+    assert (
+        config.dynamodb_table_pipeline_metadata
+        == PipelineMetadata.Meta.table_name
+    )
+
     for lbd_func in [
         config.lbd_func_hello,
         config.lbd_func_s3sync,

@@ -70,8 +70,8 @@ class LambdaStack(cdk.Stack):
             **kwargs,
         )
 
-        self.s01_create_lambda_functions()
-        self.s02_02_configure_s3_event_source()
+        # self.s01_create_lambda_functions()
+        # self.s02_02_configure_s3_event_source()
 
     def get_lambda_layers_construct_for_function(
         self,

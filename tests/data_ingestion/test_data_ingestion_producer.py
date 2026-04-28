@@ -27,7 +27,7 @@ from yq_credit_card_compliance_data_lake.constants import (
     Channel,
     Currency,
 )
-from yq_credit_card_compliance_data_lake.data_ingestion.faker import TransactionFaker
+from yq_credit_card_compliance_data_lake.data_ingestion.fakers import TransactionFaker
 from yq_credit_card_compliance_data_lake.data_ingestion.models import Transaction
 from yq_credit_card_compliance_data_lake.data_ingestion.producer.api import (
     SendResult,

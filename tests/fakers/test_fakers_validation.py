@@ -11,7 +11,7 @@ invalid ``max_attempts`` argument up front.
 import pytest
 from pydantic import BaseModel, Field, ValidationError
 
-from yq_credit_card_compliance_data_lake.faker.api import make_with_retry
+from yq_credit_card_compliance_data_lake.fakers.api import make_with_retry
 
 
 class _M(BaseModel):

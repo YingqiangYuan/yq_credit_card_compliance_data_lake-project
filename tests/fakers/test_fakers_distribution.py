@@ -13,7 +13,7 @@ import statistics
 
 import pytest
 
-from yq_credit_card_compliance_data_lake.faker.api import (
+from yq_credit_card_compliance_data_lake.fakers.api import (
     weighted_choice,
     long_tail_amount,
 )

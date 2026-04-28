@@ -32,7 +32,7 @@ from yq_credit_card_compliance_data_lake.data_ingestion.api import (
     iter_shard_ids,
     send_records,
 )
-from yq_credit_card_compliance_data_lake.data_ingestion.faker import TransactionFaker
+from yq_credit_card_compliance_data_lake.data_ingestion.fakers import TransactionFaker
 from yq_credit_card_compliance_data_lake.data_ingestion.models import Transaction
 
 

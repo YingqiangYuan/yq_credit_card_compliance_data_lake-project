@@ -25,7 +25,7 @@ from datetime import datetime, timedelta, UTC
 from uuid import uuid4
 
 from ..constants import AuthStatus, Channel, Currency
-from ..faker.api import weighted_choice, long_tail_amount, make_with_retry
+from ..fakers.api import weighted_choice, long_tail_amount, make_with_retry
 from .models import Transaction
 
 

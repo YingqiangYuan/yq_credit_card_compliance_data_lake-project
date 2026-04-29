@@ -34,6 +34,9 @@ from aws_cdk import aws_iam as iam
 from aws_cdk import aws_s3 as s3
 from aws_cdk import aws_s3_notifications as s3_notifications
 from aws_cdk import aws_lambda as lambda_
+from aws_cdk import aws_lambda_event_sources as lambda_event_sources
+from aws_cdk import aws_kinesis as kinesis
+from aws_cdk import aws_sqs as sqs
 
 from constructs import Construct
 
@@ -72,6 +75,7 @@ class LambdaStack(cdk.Stack):
 
         # self.s01_create_lambda_functions()
         # self.s02_02_configure_s3_event_source()
+        # self.s03_configure_kinesis_event_source()
 
     def get_lambda_layers_construct_for_function(
         self,
@@ -182,6 +186,58 @@ class LambdaStack(cdk.Stack):
         for lbd_func_config in self.one.config.lbd_func_mappings.values():
             lbd_func = self.get_lambda_function_construct_for_function(lbd_func_config)
             self.lambda_func_mappings[lbd_func_config.short_name] = lbd_func
+
+    def s03_configure_kinesis_event_source(self: "LambdaStack"):
+        """Wire the prod Kinesis transaction stream to the
+        ``transaction_ingestion`` Lambda.
+
+        Configuration follows doc1 §1.1 / §10.2:
+
+        - ``starting_position=LATEST`` — don't replay history at deploy time;
+          a fresh deploy of the Lambda only sees records that arrive after
+          the Event Source Mapping is created.
+        - ``batch_size=100`` + ``max_batching_window=10s`` — see doc1 §10.2 Q3:
+          attempts to amortise Bronze writes to ≥ 50-100 KB per file at the
+          1-shard demo throughput.
+        - ``retry_attempts=3`` + ``bisect_batch_on_error=True`` — see doc1
+          §1.1 ("Bisect on Error of value"): isolates a poison record to a
+          single retry slot instead of failing the whole batch repeatedly.
+        - ``on_failure=SqsDlq(...)`` — failures past retry land in the DLQ
+          provisioned in :class:`InfraStack`.
+
+        Cross-stack references (Kinesis stream + DLQ ARNs) are imported via
+        ``Fn.import_value``; both are exported by ``InfraStack.s02/s04``.
+        """
+        txn_lbd = self.lambda_func_mappings[
+            self.one.config.lbd_func_transaction_ingestion.short_name
+        ]
+
+        prod_stream = kinesis.Stream.from_stream_arn(
+            self,
+            "ImportedTransactionStream",
+            stream_arn=cdk.Fn.import_value(
+                f"{self.one.config.project_name_slug}-transaction-stream-arn"
+            ),
+        )
+        dlq = sqs.Queue.from_queue_arn(
+            self,
+            "ImportedTransactionIngestionDlq",
+            queue_arn=cdk.Fn.import_value(
+                f"{self.one.config.project_name_slug}-transaction-ingestion-dlq-arn"
+            ),
+        )
+
+        txn_lbd.add_event_source(
+            lambda_event_sources.KinesisEventSource(
+                stream=prod_stream,
+                starting_position=lambda_.StartingPosition.LATEST,
+                batch_size=100,
+                max_batching_window=cdk.Duration.seconds(10),
+                retry_attempts=3,
+                bisect_batch_on_error=True,
+                on_failure=lambda_event_sources.SqsDlq(dlq),
+            )
+        )
 
     def s02_02_configure_s3_event_source(self: "LambdaStack"):
         # ----------------------------------------------------------------------

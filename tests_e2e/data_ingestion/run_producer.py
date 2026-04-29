@@ -17,6 +17,10 @@ Usage::
 
     # Run forever until Ctrl+C
     python -m tests_e2e.data_ingestion.run_producer --forever
+
+    # Phase 4 end-to-end smoke — push to PROD stream so the deployed
+    # Lambda consumer picks records up and writes Bronze + DDB.
+    python -m tests_e2e.data_ingestion.run_producer --prod -t 3
 """
 
 import argparse
@@ -26,7 +30,7 @@ from yq_credit_card_compliance_data_lake.tests.e2e.api import produce_transactio
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Push fake transactions to the test Kinesis stream in bursts."
+        description="Push fake transactions to a Kinesis stream in bursts."
     )
     parser.add_argument(
         "-k", "--burst-size", type=int, default=10,
@@ -46,7 +50,13 @@ def main() -> None:
     )
     parser.add_argument(
         "--no-purge", action="store_true",
-        help="skip the pre-run purge step",
+        help="skip the pre-run purge step (purge is auto-disabled with --prod)",
+    )
+    parser.add_argument(
+        "--prod", action="store_true",
+        help="send to the PRODUCTION transaction stream — Phase 4 end-to-end "
+             "smoke against the deployed Lambda consumer. Mutually exclusive "
+             "with purge: a prod stream is never purged.",
     )
     args = parser.parse_args()
 
@@ -55,6 +65,7 @@ def main() -> None:
         interval_seconds=args.interval,
         total_bursts=None if args.forever else args.bursts,
         purge_first=not args.no_purge,
+        prod=args.prod,
     )
 
 

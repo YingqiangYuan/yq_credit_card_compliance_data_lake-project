@@ -15,7 +15,7 @@ import typing as T
 from ....api import one
 from ....data_ingestion.api import Consumer
 from ....logger import logger
-from ._kinesis import get_test_stream_name
+from ._kinesis import get_prod_stream_name, get_test_stream_name
 
 
 def _format_record(idx: int, txn: dict) -> str:
@@ -35,6 +35,7 @@ def consume(
     iterator_type: str = "LATEST",
     wait_seconds: float = 1.0,
     limit: int = 500,
+    prod: bool = False,
 ) -> int:
     """Run the long-running consumer flow.
 
@@ -55,8 +56,14 @@ def consume(
         of every record still retained in the stream.
     :param wait_seconds: idle sleep between empty polling passes.
     :param limit: max records per ``GetRecords`` call.
+    :param prod: when ``True``, tail the production transaction stream
+        instead of the test stream.  Each Kinesis consumer maintains its
+        own iterator independently of any other reader, so doing this
+        does *not* steal records from the deployed Lambda consumer — both
+        see the same records.  Useful as a debug tap to see what Lambda
+        is currently being asked to process.
     """
-    stream = get_test_stream_name()
+    stream = get_prod_stream_name() if prod else get_test_stream_name()
     consumer = Consumer(one.kinesis_client, stream)
 
     logger.ruler(

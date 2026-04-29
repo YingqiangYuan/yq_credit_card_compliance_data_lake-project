@@ -8,3 +8,4 @@ from .producer import produce
 from .consumer import consume
 from ._kinesis import purge_stream
 from ._kinesis import get_test_stream_name
+from ._kinesis import get_prod_stream_name

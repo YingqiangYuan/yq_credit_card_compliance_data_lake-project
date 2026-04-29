@@ -24,6 +24,17 @@ def get_test_stream_name() -> str:
     return one.config.kinesis_stream_transaction_test
 
 
+def get_prod_stream_name() -> str:
+    """The production Kinesis stream provisioned by :class:`InfraStack`.
+
+    Used by the Phase 4 ``--prod`` flag on the e2e scripts to drive an
+    end-to-end smoke against the deployed Lambda consumer.  Purging this
+    stream is never appropriate; ``purge_stream`` must not be called with
+    this name.
+    """
+    return one.config.kinesis_stream_transaction
+
+
 def purge_stream(stream_name: T.Optional[str] = None) -> int:
     """Drain every shard with a side iterator and discard the records.
     Returns the total count read.

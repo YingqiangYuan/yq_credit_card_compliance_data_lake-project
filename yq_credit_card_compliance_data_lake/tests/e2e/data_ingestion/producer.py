@@ -15,7 +15,7 @@ import typing as T
 from ....api import one
 from ....data_ingestion.api import TransactionFaker, send_records
 from ....logger import logger
-from ._kinesis import get_test_stream_name, purge_stream
+from ._kinesis import get_prod_stream_name, get_test_stream_name, purge_stream
 
 
 def _format_record(idx: int, txn) -> str:
@@ -36,6 +36,7 @@ def produce(
     interval_seconds: float = 1.0,
     total_bursts: T.Optional[int] = 10,
     purge_first: bool = True,
+    prod: bool = False,
 ) -> None:
     """Long-running producer.
 
@@ -50,8 +51,21 @@ def produce(
         re-seeing those records.  The default e2e ``consume()`` uses
         ``LATEST``, which already sidesteps stale data, so flipping this
         off (``purge_first=False``) is fine for routine smoke runs.
+        Forced to ``False`` when ``prod=True``.
+    :param prod: when ``True``, write to the production transaction stream
+        (``Config.kinesis_stream_transaction``) instead of the test stream.
+        Drives the Phase 4 end-to-end smoke against the deployed Lambda
+        consumer — records flow Producer → Kinesis prod → Lambda → Bronze
+        S3 + Quarantine S3 + DynamoDB.  ``purge_first`` is silently forced
+        off in this mode; purging a production stream is never appropriate.
     """
-    stream = get_test_stream_name()
+    if prod:
+        stream = get_prod_stream_name()
+        if purge_first:
+            logger.info("--prod refuses purge_first; proceeding without purge")
+            purge_first = False
+    else:
+        stream = get_test_stream_name()
 
     if purge_first:
         purge_stream(stream)

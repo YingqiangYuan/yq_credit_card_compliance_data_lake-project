@@ -10,7 +10,11 @@ this script just parses CLI args and calls it.  Runs until ``Ctrl+C``.
 Usage::
 
     python -m tests_e2e.data_ingestion.run_consumer
-    python -m tests_e2e.data_ingestion.run_consumer --from-latest --wait 2.0
+    python -m tests_e2e.data_ingestion.run_consumer --from-beginning --wait 2.0
+
+    # Tap the PROD stream as a debug observer — the deployed Lambda
+    # consumer is not affected; both can read concurrently.
+    python -m tests_e2e.data_ingestion.run_consumer --prod
 """
 
 import argparse
@@ -20,7 +24,7 @@ from yq_credit_card_compliance_data_lake.tests.e2e.api import consume_transactio
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Long-poll the test Kinesis stream and pretty-print every record."
+        description="Long-poll a Kinesis stream and pretty-print every record."
     )
     parser.add_argument(
         "--from-beginning", action="store_true",
@@ -35,12 +39,19 @@ def main() -> None:
         "--limit", type=int, default=500,
         help="max records per GetRecords call (default: 500)",
     )
+    parser.add_argument(
+        "--prod", action="store_true",
+        help="tail the PRODUCTION transaction stream instead of the test "
+             "stream. Independent iterator — does not steal records from "
+             "the deployed Lambda consumer.",
+    )
     args = parser.parse_args()
 
     consume_transactions(
         iterator_type="TRIM_HORIZON" if args.from_beginning else "LATEST",
         wait_seconds=args.wait,
         limit=args.limit,
+        prod=args.prod,
     )
 
 

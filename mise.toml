@@ -161,3 +161,38 @@ depends = ["inst"]
 description = "📦 Build Lambda source zip using uv and upload to S3"
 run = ".venv/bin/python .mise/tasks/lambda_layer_3_build_lambda_source.py"
 depends = ["inst"]
+
+# Data Ingestion E2E (manual smoke against real AWS — requires cdk-up first)
+# Pass extra CLI args after `--`, e.g.  mise run e2e-producer-test -- -k 50 -t 3
+[tasks.e2e-producer-test]
+description = "🧪 E2e producer → TEST Kinesis stream (TestStack must be deployed)"
+depends = ["inst"]
+run = ".venv/bin/python -m tests_e2e.data_ingestion.run_producer"
+
+[tasks.e2e-consumer-test]
+description = "🧪 E2e consumer ← TEST Kinesis stream (long-poll, Ctrl+C to stop)"
+depends = ["inst"]
+run = ".venv/bin/python -m tests_e2e.data_ingestion.run_consumer"
+
+# When this task pushes records to the PROD Kinesis stream, the deployed
+# Event Source Mapping (declared in cdk/stacks/lambda_stack.py ::
+# s03_configure_kinesis_event_source) invokes the transaction-ingestion
+# Lambda (handler in lbd/transaction_ingestion.py, registered via
+# Config.lbd_func_transaction_ingestion).  The handler routes each record:
+#   - records that pass validation → Bronze S3 prefix
+#       defined by one.s3dir_bronze_transactions (one/one_03_s3.py)
+#   - records that fail validation or decode → Quarantine S3 prefix
+#       defined by one.s3dir_quarantine_transactions (one/one_03_s3.py)
+#   both suffixed with `year=YYYY/month=MM/day=DD/{run_id}.ndjson`
+#   (build_partition_path lives in data_ingestion/writer/writer_00_base.py)
+# It also writes one DynamoDB row per invocation to the table named by
+# Config.dynamodb_table_pipeline_metadata (config/config_00_main.py).
+[tasks.e2e-producer-prod]
+description = "🚨 E2e producer → PROD Kinesis stream — drives the deployed Lambda end-to-end"
+depends = ["inst"]
+run = ".venv/bin/python -m tests_e2e.data_ingestion.run_producer --prod"
+
+[tasks.e2e-consumer-prod]
+description = "🚨 E2e consumer ← PROD Kinesis stream (debug tap; Lambda still gets the records)"
+depends = ["inst"]
+run = ".venv/bin/python -m tests_e2e.data_ingestion.run_consumer --prod"
